@@ -1,5 +1,19 @@
 import { MarketPrice } from '../types';
 
+// Fallback data in case the API is unavailable
+const FALLBACK_PRICES: Record<string, number> = {
+  'BTCUSDT': 65000,
+  'ETHUSDT': 3500,
+  'BNBUSDT': 600,
+  'ADAUSDT': 0.5,
+  'DOGEUSDT': 0.15,
+  'XRPUSDT': 0.6,
+  'SOLUSDT': 140,
+  'DOTUSDT': 7.5,
+  'LTCUSDT': 80,
+  'LINKUSDT': 18
+};
+
 /**
  * Fetches current price data from Binance API via our proxy
  * @param symbols Array of ticker symbols to fetch prices for
@@ -12,7 +26,15 @@ export async function fetchMarketPrices(symbols: string[]): Promise<MarketPrice[
       ? `/api/prices?symbols=${symbols.join(',')}`
       : '/api/prices';
     
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 30 } // Cache for 30 seconds
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
@@ -22,7 +44,16 @@ export async function fetchMarketPrices(symbols: string[]): Promise<MarketPrice[
     return data;
   } catch (error) {
     console.error('Error fetching market prices:', error);
-    return [];
+    
+    // Use fallback data if API call fails
+    console.log('Using fallback price data');
+    return symbols.map(symbol => {
+      const price = FALLBACK_PRICES[symbol] || 0;
+      return {
+        symbol,
+        price: price.toString()
+      };
+    });
   }
 }
 

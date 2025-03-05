@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 
+// Define the shape of the Binance API response
+interface BinancePrice {
+  symbol: string;
+  price: string;
+  time?: number;
+}
+
 export async function GET(request: Request) {
   try {
     // Get symbols from query params
@@ -16,12 +23,12 @@ export async function GET(request: Request) {
       throw new Error(`Binance API error: ${response.status}`);
     }
     
-    const data = await response.json();
+    const data = await response.json() as BinancePrice[];
     
     // Filter by symbols if provided
     if (symbols) {
       const symbolList = symbols.split(',');
-      const filteredData = data.filter((item: any) => 
+      const filteredData = data.filter((item: BinancePrice) => 
         symbolList.includes(item.symbol)
       );
       return NextResponse.json(filteredData);

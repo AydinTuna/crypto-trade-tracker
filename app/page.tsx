@@ -1,101 +1,156 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { Trade, Balance, MarketPrice } from './types';
+import { fetchMarketPrices, calculatePnL } from './utils/api';
+import { loadTrades, saveTrades, loadBalance, saveBalance } from './utils/storage';
+import TradeForm from './components/TradeForm';
+import TradeTable from './components/TradeTable';
+import BalanceForm from './components/BalanceForm';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [balance, setBalance] = useState<Balance>({ amount: 0, lastUpdated: Date.now() });
+  const [marketPrices, setMarketPrices] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalPnL, setTotalPnL] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Load trades and balance from local storage on initial render
+  useEffect(() => {
+    const storedTrades = loadTrades();
+    const storedBalance = loadBalance();
+
+    setTrades(storedTrades);
+    setBalance(storedBalance);
+    setIsLoading(false);
+  }, []);
+
+  // Fetch market prices at regular intervals
+  useEffect(() => {
+    const fetchPrices = async () => {
+      // Get unique tickers from trades
+      const tickers = [...new Set(trades.map(trade => trade.ticker))];
+
+      if (tickers.length === 0) {
+        return;
+      }
+
+      try {
+        const prices = await fetchMarketPrices(tickers);
+
+        // Convert to a more usable format
+        const priceMap: Record<string, number> = {};
+        prices.forEach((item: MarketPrice) => {
+          priceMap[item.symbol] = parseFloat(item.price);
+        });
+
+        setMarketPrices(priceMap);
+      } catch (error) {
+        console.error('Error fetching prices:', error);
+      }
+    };
+
+    // Fetch immediately on component mount or when trades change
+    fetchPrices();
+
+    // Set up interval for regular updates (every 30 seconds)
+    const intervalId = setInterval(fetchPrices, 30000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [trades]);
+
+  // Calculate total PnL whenever trades or market prices change
+  useEffect(() => {
+    let pnlSum = 0;
+
+    trades.forEach(trade => {
+      const currentPrice = marketPrices[trade.ticker];
+
+      if (currentPrice) {
+        const { pnl } = calculatePnL(
+          trade.entryPrice,
+          currentPrice,
+          trade.leverage,
+          trade.marginSize
+        );
+
+        pnlSum += pnl;
+      }
+    });
+
+    // Round to 2 decimal places
+    setTotalPnL(parseFloat(pnlSum.toFixed(2)));
+  }, [trades, marketPrices]);
+
+  // Calculate effective balance (base balance + PnL)
+  const effectiveBalance = useMemo(() => {
+    return {
+      amount: parseFloat((balance.amount + totalPnL).toFixed(2)),
+      lastUpdated: balance.lastUpdated,
+      baseBalance: balance.amount,
+      pnl: totalPnL
+    };
+  }, [balance, totalPnL]);
+
+  // Add a new trade
+  const handleAddTrade = (trade: Trade) => {
+    const updatedTrades = [...trades, trade];
+    setTrades(updatedTrades);
+    saveTrades(updatedTrades);
+  };
+
+  // Delete a trade
+  const handleDeleteTrade = (id: string) => {
+    const updatedTrades = trades.filter(trade => trade.id !== id);
+    setTrades(updatedTrades);
+    saveTrades(updatedTrades);
+  };
+
+  // Update balance
+  const handleUpdateBalance = (newBalance: Balance) => {
+    setBalance(newBalance);
+    saveBalance(newBalance);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-8 p-6 rounded-xl gradient-header text-white shadow-lg">
+          <h1 className="text-3xl font-bold">
+            Crypto Trade Tracker
+          </h1>
+          <p className="mt-2 text-gray-100 opacity-90">
+            Track your cryptocurrency trades and monitor performance in real-time
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1 space-y-8">
+            <BalanceForm
+              balance={effectiveBalance}
+              onUpdateBalance={handleUpdateBalance}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <TradeForm onAddTrade={handleAddTrade} />
+          </div>
+
+          <div className="lg:col-span-2">
+            <TradeTable
+              trades={trades}
+              onDeleteTrade={handleDeleteTrade}
+              marketPrices={marketPrices}
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }

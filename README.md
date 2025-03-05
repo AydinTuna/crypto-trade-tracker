@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Crypto Trade Tracker
+
+A simple yet powerful web application to track your cryptocurrency trades and monitor performance in real-time.
+
+## Features
+
+- Add and manage cryptocurrency trades with ticker, entry price, leverage, and margin size
+- Real-time price updates from Binance API
+- Automatic PnL (Profit and Loss) calculations
+- Sort and filter trades by various criteria
+- Track account balance
+- Responsive design for desktop and mobile
+- Dark mode support
+
+## Technologies Used
+
+- Next.js 15
+- React 19
+- TypeScript
+- TailwindCSS
+- Binance API
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18.17 or later
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/crypto-trade-tracker.git
+cd crypto-trade-tracker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. Set your initial account balance by clicking "Update" in the Account Balance card
+2. Add trades by filling out the form in the "Add New Trade" section
+3. View your trades in the table, which will automatically update with current prices
+4. Sort trades by clicking on column headers
+5. Filter trades by ticker using the filter input above the table
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data Storage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All data is stored locally in your browser's localStorage. No data is sent to any server.
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Acknowledgements
+
+- [Binance API](https://binance-docs.github.io/apidocs/) for real-time cryptocurrency price data
+- [Next.js](https://nextjs.org/) for the React framework
+- [TailwindCSS](https://tailwindcss.com/) for styling

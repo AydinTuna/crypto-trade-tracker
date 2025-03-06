@@ -171,6 +171,19 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                 </th>
                                 <th
                                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                    onClick={() => handleSort('isLong')}
+                                >
+                                    <div className="flex items-center">
+                                        Position
+                                        {sortConfig.key === 'isLong' && (
+                                            <span className="ml-1">
+                                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
                                     onClick={() => handleSort('entryPrice')}
                                 >
                                     <div className="flex items-center">
@@ -254,19 +267,6 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                     <div className="flex items-center">
                                         Date
                                         {sortConfig.key === 'timestamp' && (
-                                            <span className="ml-1">
-                                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-                                    onClick={() => handleSort('isLong')}
-                                >
-                                    <div className="flex items-center">
-                                        Position
-                                        {sortConfig.key === 'isLong' && (
                                             <span className="ml-1">
                                                 {sortConfig.direction === 'ascending' ? '↑' : '↓'}
                                             </span>

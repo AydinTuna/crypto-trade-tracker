@@ -67,3 +67,34 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Binance API](https://binance-docs.github.io/apidocs/) for real-time cryptocurrency price data
 - [Next.js](https://nextjs.org/) for the React framework
 - [TailwindCSS](https://tailwindcss.com/) for styling
+
+## Deployment Configuration
+
+### Setting up Environment Variables in Vercel
+
+1. Go to your Vercel dashboard
+2. Select your project
+3. Go to "Settings" > "Environment Variables"
+4. Add the following environment variable:
+   - Name: `PROXY_SERVER_URL`
+   - Value: `https://crypto-trade-tracker-proxy.onrender.com/api/binance/prices`
+5. Select "Production" and "Preview" environments
+6. Click "Save"
+7. Redeploy your application for the changes to take effect
+
+### Local Development
+
+For local development, the `.env.local` file contains the necessary environment variables.
+
+```
+npm run dev
+```
+
+## Proxy Server
+
+This application uses a proxy server deployed at:
+`https://crypto-trade-tracker-proxy.onrender.com`
+
+The proxy server relays requests to the Binance API from a region where it's accessible, allowing the application to work properly when deployed in regions where Binance API is restricted (like the US).
+
+If the proxy server needs to be updated or redeployed, see the instructions in the `proxy-server` directory.

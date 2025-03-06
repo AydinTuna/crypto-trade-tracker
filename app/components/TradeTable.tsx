@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trade, SortConfig, FilterConfig } from '../types';
 import { calculatePnL } from '../utils/api';
+import { formatNumber, formatNumberWithCommas } from '../utils/formatters';
 
 interface TradeTableProps {
     trades: Trade[];
@@ -272,13 +273,13 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        ${trade.entryPrice.toFixed(8)}
+                                        ${formatNumber(trade.entryPrice, 8)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         {trade.currentPrice
                                             ? (
                                                 <div className="flex items-center">
-                                                    <span>${trade.currentPrice.toFixed(8)}</span>
+                                                    <span>${formatNumber(trade.currentPrice, 8)}</span>
                                                     {trade.currentPrice > trade.entryPrice ? (
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -302,7 +303,7 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span className="font-medium">${trade.marginSize.toFixed(2)}</span>
+                                        <span className="font-medium">${formatNumberWithCommas(trade.marginSize)}</span>
                                     </td>
                                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${trade.pnl && trade.pnl > 0
                                         ? 'text-green-600 dark:text-green-400'
@@ -313,7 +314,7 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         {trade.pnl !== undefined
                                             ? (
                                                 <div className="flex items-center">
-                                                    <span>${Math.abs(trade.pnl).toFixed(2)}</span>
+                                                    <span>${formatNumberWithCommas(Math.abs(trade.pnl))}</span>
                                                     {trade.pnl > 0 ? (
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

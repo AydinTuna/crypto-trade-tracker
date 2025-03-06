@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Balance } from '../types';
+import { formatNumberWithCommas } from '../utils/formatters';
 
 interface BalanceFormProps {
     balance: Balance;
@@ -116,7 +117,7 @@ export default function BalanceForm({ balance, onUpdateBalance }: BalanceFormPro
                         <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total Balance</p>
                             <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">
-                                ${balance.amount.toFixed(2)}
+                                ${formatNumberWithCommas(balance.amount)}
                             </p>
 
                             {/* Display base balance and PnL if available */}
@@ -125,13 +126,13 @@ export default function BalanceForm({ balance, onUpdateBalance }: BalanceFormPro
                                     <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                                         <span className="w-24">Base Balance:</span>
                                         <span className="font-medium text-gray-700 dark:text-gray-300">
-                                            ${balance.baseBalance.toFixed(2)}
+                                            ${formatNumberWithCommas(balance.baseBalance)}
                                         </span>
                                     </p>
                                     <p className="text-xs flex items-center">
                                         <span className="w-24 text-gray-500 dark:text-gray-400">Current PnL:</span>
                                         <span className={`font-medium ${getPnlColor(balance.pnl)}`}>
-                                            {balance.pnl !== undefined && (balance.pnl >= 0 ? '+' : '')}{balance.pnl?.toFixed(2) || '0.00'}
+                                            {balance.pnl !== undefined && (balance.pnl >= 0 ? '+' : '')}${balance.pnl !== undefined ? formatNumberWithCommas(Math.abs(balance.pnl)) : '0.00'}
                                         </span>
                                     </p>
                                 </div>

@@ -72,7 +72,8 @@ export default function Home() {
           trade.entryPrice,
           currentPrice,
           trade.leverage,
-          trade.marginSize
+          trade.marginSize,
+          trade.isLong
         );
 
         pnlSum += pnl;

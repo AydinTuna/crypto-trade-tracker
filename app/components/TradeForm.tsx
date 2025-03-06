@@ -10,6 +10,7 @@ export default function TradeForm({ onAddTrade }: TradeFormProps) {
     const [entryPrice, setEntryPrice] = useState('');
     const [leverage, setLeverage] = useState('1');
     const [marginSize, setMarginSize] = useState('');
+    const [isLong, setIsLong] = useState(true);
     const [error, setError] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -28,6 +29,7 @@ export default function TradeForm({ onAddTrade }: TradeFormProps) {
             entryPrice: parseFloat(entryPrice),
             leverage: parseFloat(leverage),
             marginSize: parseFloat(marginSize),
+            isLong: isLong,
             timestamp: Date.now(),
         };
 
@@ -39,6 +41,7 @@ export default function TradeForm({ onAddTrade }: TradeFormProps) {
         setEntryPrice('');
         setLeverage('1');
         setMarginSize('');
+        setIsLong(true);
         setError('');
     };
 
@@ -82,6 +85,40 @@ export default function TradeForm({ onAddTrade }: TradeFormProps) {
                             style={{ paddingLeft: '2.5rem' }}
                             placeholder="BTCUSDT"
                         />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Position Type
+                    </label>
+                    <div className="flex rounded-md shadow-sm">
+                        <button
+                            type="button"
+                            className={`flex-1 py-2 px-4 text-sm font-medium rounded-l-md border ${isLong
+                                ? 'bg-green-500 text-white border-green-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+                                }`}
+                            onClick={() => setIsLong(true)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            </svg>
+                            Long
+                        </button>
+                        <button
+                            type="button"
+                            className={`flex-1 py-2 px-4 text-sm font-medium rounded-r-md border ${!isLong
+                                ? 'bg-red-500 text-white border-red-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+                                }`}
+                            onClick={() => setIsLong(false)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                            Short
+                        </button>
                     </div>
                 </div>
 

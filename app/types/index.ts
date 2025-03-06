@@ -4,6 +4,7 @@ export interface Trade {
   entryPrice: number;
   leverage: number;
   marginSize: number;
+  isLong: boolean;
   currentPrice?: number;
   pnl?: number;
   pnlPercentage?: number;

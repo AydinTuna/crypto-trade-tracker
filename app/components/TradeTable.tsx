@@ -25,7 +25,8 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                     trade.entryPrice,
                     currentPrice,
                     trade.leverage,
-                    trade.marginSize
+                    trade.marginSize,
+                    trade.isLong
                 );
 
                 return {
@@ -259,6 +260,19 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         )}
                                     </div>
                                 </th>
+                                <th
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                    onClick={() => handleSort('isLong')}
+                                >
+                                    <div className="flex items-center">
+                                        Position
+                                        {sortConfig.key === 'isLong' && (
+                                            <span className="ml-1">
+                                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Actions
                                 </th>
@@ -270,6 +284,14 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                             {trade.ticker}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 py-1 rounded-full ${trade.isLong
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            }`}>
+                                            {trade.isLong ? 'Long' : 'Short'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">

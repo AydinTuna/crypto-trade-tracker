@@ -16,13 +16,27 @@ export function saveTrades(trades: Trade[]): void {
  * Load trades from local storage
  */
 export function loadTrades(): Trade[] {
-  if (typeof window !== 'undefined') {
-    const storedTrades = localStorage.getItem(TRADES_KEY);
-    if (storedTrades) {
-      return JSON.parse(storedTrades);
-    }
+  if (typeof window === 'undefined') {
+    return [];
   }
-  return [];
+
+  try {
+    const storedTrades = localStorage.getItem(TRADES_KEY);
+    if (!storedTrades) {
+      return [];
+    }
+
+    const parsedTrades = JSON.parse(storedTrades);
+    
+    // Ensure all trades have the isLong property (for backward compatibility)
+    return parsedTrades.map((trade: Trade) => ({
+      ...trade,
+      isLong: trade.isLong !== undefined ? trade.isLong : true // Default to long if not specified
+    }));
+  } catch (error) {
+    console.error('Error loading trades:', error);
+    return [];
+  }
 }
 
 /**

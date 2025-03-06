@@ -85,7 +85,14 @@ export function calculatePnL(
   
   const priceChangePercentage = (priceDifference / entryPrice) * 100;
   const leveragedChangePercentage = priceChangePercentage * leverage;
-  const pnl = (marginSize * leveragedChangePercentage) / 100;
+  
+  // Refactored PNL calculation
+  // Convert percentage to decimal for calculation
+  const pnlPercentageDecimal = leveragedChangePercentage / 100;
+  
+  // Using the formula: PNL = (PNL% + 1) * (Margin_Size / Leverage)
+  const positionSize = marginSize / leverage;
+  const pnl = (pnlPercentageDecimal + 1) * positionSize - positionSize;
   
   return {
     pnl: parseFloat(pnl.toFixed(2)),

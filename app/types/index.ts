@@ -2,9 +2,11 @@ export interface Trade {
   id: string;
   ticker: string;
   entryPrice: number;
+  exitPrice?: number;
   leverage: number;
   marginSize: number;
   isLong: boolean;
+  isClosed?: boolean;
   currentPrice?: number;
   pnl?: number;
   pnlPercentage?: number;

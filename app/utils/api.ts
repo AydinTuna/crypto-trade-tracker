@@ -60,10 +60,12 @@ export async function fetchMarketPrices(symbols: string[]): Promise<MarketPrice[
 /**
  * Calculate PnL for a trade
  * @param entryPrice Entry price of the trade
- * @param currentPrice Current market price
+ * @param currentPrice Current market price or exit price for closed positions
  * @param leverage Leverage used for the trade
  * @param marginSize Size of the margin in USD
  * @param isLong Whether the position is long (true) or short (false)
+ * @param isClosed Whether the position is closed
+ * @param exitPrice Exit price for closed positions
  * @returns Object containing PnL and PnL percentage
  */
 export function calculatePnL(
@@ -71,17 +73,22 @@ export function calculatePnL(
   currentPrice: number,
   leverage: number,
   marginSize: number,
-  isLong: boolean = true
+  isLong: boolean = true,
+  isClosed: boolean = false,
+  exitPrice?: number
 ): { pnl: number; pnlPercentage: number } {
-  if (!entryPrice || !currentPrice) {
+  if (!entryPrice || (!currentPrice && !exitPrice)) {
     return { pnl: 0, pnlPercentage: 0 };
   }
+
+  // Use exitPrice instead of currentPrice for closed positions
+  const priceToCompare = isClosed && exitPrice ? exitPrice : currentPrice;
 
   // For simplicity, we'll assume all trades are long positions
   // In a real app, you'd handle both long and short positions
   const priceDifference = isLong 
-    ? currentPrice - entryPrice 
-    : entryPrice - currentPrice;
+    ? priceToCompare - entryPrice 
+    : entryPrice - priceToCompare;
   
   const priceChangePercentage = (priceDifference / entryPrice) * 100;
   const leveragedChangePercentage = priceChangePercentage * leverage;

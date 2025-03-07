@@ -6,21 +6,42 @@ import { formatNumber, formatNumberWithCommas } from '../utils/formatters';
 interface TradeTableProps {
     trades: Trade[];
     onDeleteTrade: (id: string) => void;
+    onCloseTrade: (id: string, exitPrice: number) => void;
     marketPrices: Record<string, number>;
 }
 
-export default function TradeTable({ trades, onDeleteTrade, marketPrices }: TradeTableProps) {
+export default function TradeTable({ trades, onDeleteTrade, onCloseTrade, marketPrices }: TradeTableProps) {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'timestamp', direction: 'descending' });
     const [filterConfig, setFilterConfig] = useState<FilterConfig>({});
     const [filterInput, setFilterInput] = useState('');
     const [displayTrades, setDisplayTrades] = useState<Trade[]>([]);
+    const [closingTradeId, setClosingTradeId] = useState<string | null>(null);
+    const [exitPrice, setExitPrice] = useState<string>('');
 
     // Update trades with current prices and PnL calculations
     useEffect(() => {
         const updatedTrades = trades.map(trade => {
             const currentPrice = marketPrices[trade.ticker];
 
-            if (currentPrice) {
+            if (trade.isClosed && trade.exitPrice) {
+                // For closed positions, use the exit price for PnL calculation
+                const { pnl, pnlPercentage } = calculatePnL(
+                    trade.entryPrice,
+                    0, // Not used for closed positions
+                    trade.leverage,
+                    trade.marginSize,
+                    trade.isLong,
+                    true,
+                    trade.exitPrice
+                );
+
+                return {
+                    ...trade,
+                    pnl,
+                    pnlPercentage
+                };
+            } else if (currentPrice) {
+                // For open positions, use the current market price
                 const { pnl, pnlPercentage } = calculatePnL(
                     trade.entryPrice,
                     currentPrice,
@@ -92,6 +113,28 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
         return new Date(timestamp).toLocaleString();
     };
 
+    const handleCloseButtonClick = (trade: Trade) => {
+        setClosingTradeId(trade.id);
+        setExitPrice(trade.currentPrice ? trade.currentPrice.toString() : '');
+    };
+
+    const handleExitPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setExitPrice(e.target.value);
+    };
+
+    const handleClosePosition = () => {
+        if (closingTradeId && exitPrice) {
+            onCloseTrade(closingTradeId, parseFloat(exitPrice));
+            setClosingTradeId(null);
+            setExitPrice('');
+        }
+    };
+
+    const cancelClosePosition = () => {
+        setClosingTradeId(null);
+        setExitPrice('');
+    };
+
     return (
         <div className="card p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -142,6 +185,46 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                 </form>
             </div>
 
+            {closingTradeId && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">Close Position</h3>
+                    <div className="flex flex-col sm:flex-row gap-4 items-end">
+                        <div className="w-full sm:w-auto">
+                            <label htmlFor="exitPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Exit Price
+                            </label>
+                            <input
+                                type="number"
+                                id="exitPrice"
+                                value={exitPrice}
+                                onChange={handleExitPriceChange}
+                                step="0.00000001"
+                                min="0"
+                                className="input-styled w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                placeholder="Enter exit price"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={handleClosePosition}
+                                className="btn-primary"
+                                disabled={!exitPrice}
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                type="button"
+                                onClick={cancelClosePosition}
+                                className="btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {displayTrades.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -189,6 +272,19 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                     <div className="flex items-center">
                                         Entry Price
                                         {sortConfig.key === 'entryPrice' && (
+                                            <span className="ml-1">
+                                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                                    onClick={() => handleSort('exitPrice')}
+                                >
+                                    <div className="flex items-center">
+                                        Exit Price
+                                        {sortConfig.key === 'exitPrice' && (
                                             <span className="ml-1">
                                                 {sortConfig.direction === 'ascending' ? '↑' : '↓'}
                                             </span>
@@ -298,7 +394,12 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         ${formatNumber(trade.entryPrice, 8)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        {trade.currentPrice
+                                        {trade.isClosed && trade.exitPrice
+                                            ? `$${formatNumber(trade.exitPrice, 8)}`
+                                            : '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        {!trade.isClosed && trade.currentPrice
                                             ? (
                                                 <div className="flex items-center">
                                                     <span>${formatNumber(trade.currentPrice, 8)}</span>
@@ -313,11 +414,13 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                                     ) : null}
                                                 </div>
                                             )
-                                            : (
-                                                <div className="flex items-center">
-                                                    <div className="animate-pulse h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                                                </div>
-                                            )}
+                                            : trade.isClosed
+                                                ? 'Closed'
+                                                : (
+                                                    <div className="flex items-center">
+                                                        <div className="animate-pulse h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                                                    </div>
+                                                )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
@@ -368,15 +471,28 @@ export default function TradeTable({ trades, onDeleteTrade, marketPrices }: Trad
                                         {formatDate(trade.timestamp)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                                        <button
-                                            onClick={() => onDeleteTrade(trade.id)}
-                                            className="btn-danger flex items-center text-sm"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                            Delete
-                                        </button>
+                                        <div className="flex space-x-2">
+                                            {!trade.isClosed && (
+                                                <button
+                                                    onClick={() => handleCloseButtonClick(trade)}
+                                                    className="btn-primary flex items-center text-sm"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Close
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => onDeleteTrade(trade.id)}
+                                                className="btn-danger flex items-center text-sm"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

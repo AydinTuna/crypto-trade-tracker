@@ -28,8 +28,8 @@ export default function Home() {
   // Fetch market prices at regular intervals
   useEffect(() => {
     const fetchPrices = async () => {
-      // Get unique tickers from trades
-      const tickers = [...new Set(trades.map(trade => trade.ticker))];
+      // Get unique tickers from open trades only
+      const tickers = [...new Set(trades.filter(trade => !trade.isClosed).map(trade => trade.ticker))];
 
       if (tickers.length === 0) {
         return;
@@ -65,18 +65,30 @@ export default function Home() {
     let pnlSum = 0;
 
     trades.forEach(trade => {
-      const currentPrice = marketPrices[trade.ticker];
-
-      if (currentPrice) {
+      if (trade.isClosed && trade.exitPrice) {
+        // For closed positions, use the exit price for PnL calculation
         const { pnl } = calculatePnL(
           trade.entryPrice,
-          currentPrice,
+          0, // Not used for closed positions
           trade.leverage,
           trade.marginSize,
-          trade.isLong
+          trade.isLong,
+          true,
+          trade.exitPrice
         );
-
         pnlSum += pnl;
+      } else {
+        const currentPrice = marketPrices[trade.ticker];
+        if (currentPrice) {
+          const { pnl } = calculatePnL(
+            trade.entryPrice,
+            currentPrice,
+            trade.leverage,
+            trade.marginSize,
+            trade.isLong
+          );
+          pnlSum += pnl;
+        }
       }
     });
 
@@ -104,6 +116,22 @@ export default function Home() {
   // Delete a trade
   const handleDeleteTrade = (id: string) => {
     const updatedTrades = trades.filter(trade => trade.id !== id);
+    setTrades(updatedTrades);
+    saveTrades(updatedTrades);
+  };
+
+  // Close a trade
+  const handleCloseTrade = (id: string, exitPrice: number) => {
+    const updatedTrades = trades.map(trade => {
+      if (trade.id === id) {
+        return {
+          ...trade,
+          exitPrice,
+          isClosed: true
+        };
+      }
+      return trade;
+    });
     setTrades(updatedTrades);
     saveTrades(updatedTrades);
   };
@@ -147,6 +175,7 @@ export default function Home() {
             <TradeTable
               trades={trades}
               onDeleteTrade={handleDeleteTrade}
+              onCloseTrade={handleCloseTrade}
               marketPrices={marketPrices}
             />
           </div>

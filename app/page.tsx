@@ -7,6 +7,7 @@ import { loadTrades, saveTrades, loadBalance, saveBalance } from './utils/storag
 import TradeForm from './components/TradeForm';
 import TradeTable from './components/TradeTable';
 import BalanceForm from './components/BalanceForm';
+import Footer from './components/Footer';
 
 export default function Home() {
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -180,6 +181,8 @@ export default function Home() {
             />
           </div>
         </div>
+
+        <Footer />
       </div>
     </div>
   );

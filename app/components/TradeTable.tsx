@@ -394,33 +394,20 @@ export default function TradeTable({ trades, onDeleteTrade, onCloseTrade, market
                                         ${formatNumber(trade.entryPrice, 8)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        {trade.isClosed && trade.exitPrice
+                                        {trade.exitPrice
                                             ? `$${formatNumber(trade.exitPrice, 8)}`
                                             : '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        {!trade.isClosed && trade.currentPrice
-                                            ? (
+                                        {trade.currentPrice && !trade.isClosed ? (
+                                            <span>${formatNumber(trade.currentPrice, 8)}</span>
+                                        ) : trade.isClosed
+                                            ? 'Closed'
+                                            : (
                                                 <div className="flex items-center">
-                                                    <span>${formatNumber(trade.currentPrice, 8)}</span>
-                                                    {trade.currentPrice > trade.entryPrice ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                                        </svg>
-                                                    ) : trade.currentPrice < trade.entryPrice ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                                        </svg>
-                                                    ) : null}
+                                                    <div className="animate-pulse h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
                                                 </div>
-                                            )
-                                            : trade.isClosed
-                                                ? 'Closed'
-                                                : (
-                                                    <div className="flex items-center">
-                                                        <div className="animate-pulse h-4 w-16 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                                                    </div>
-                                                )}
+                                            )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">

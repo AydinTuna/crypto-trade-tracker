@@ -16,8 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Crypto Trade Tracker",
   description: "Track your cryptocurrency trades and monitor performance",
+  keywords: ["crypto", "trades", "tracker", "cryptocurrency", "investing", "trading"],
   icons: {
     icon: '/icon.svg',
+    apple: '/icon.svg',
   },
 };
 
@@ -29,7 +31,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/icon?<generated>" type="image/png" sizes="32x32" />
+        <link
+          rel="apple-touch-icon"
+          href="/apple-icon?<generated>"
+          type="image/<generated>"
+          sizes="<generated>"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

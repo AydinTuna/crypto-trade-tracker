@@ -40,13 +40,13 @@ export default function RootLayout({
           sizes="<generated>"
         />
         {/* Google Analytics */}
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-4BPBT6MYY2" />
+        <Script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.G_TAG}`} />
         <Script id="google-analytics">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-4BPBT6MYY2');
+            gtag('config', '${process.env.G_TAG}');
           `}
         </Script>
       </head>
